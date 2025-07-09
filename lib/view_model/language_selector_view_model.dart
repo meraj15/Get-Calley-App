@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
+
 import '../model/language_model.dart';
 
-class LanguageSelectorViewModel {
+class LanguageSelectorViewModel extends ChangeNotifier{
   final List<LanguageModel> languages = [
     LanguageModel(name: 'English', native: 'Hi'),
     LanguageModel(name: 'Hindi', native: 'नमस्ते'),
