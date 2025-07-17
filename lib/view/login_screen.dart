@@ -7,7 +7,6 @@ import 'package:get_calley_app_armaan/view_model/login_view_model.dart';
 import 'package:get_calley_app_armaan/widgets/custom_button.dart';
 import 'package:provider/provider.dart';
 
-
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
@@ -15,10 +14,10 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<LoginViewModel>();
 
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: AppColors.scaffoldColor,
-        body: Column(
+    return Scaffold(
+      backgroundColor: AppColors.scaffoldColor,
+      body: SafeArea(
+        child: Column(
           children: [
             Padding(
               padding: EdgeInsets.symmetric(vertical: 33.h),
@@ -33,7 +32,9 @@ class LoginScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.white,
                   border: Border.all(color: AppColors.borderColor),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(20.r),
+                  ),
                 ),
                 child: SingleChildScrollView(
                   child: Column(
@@ -69,6 +70,7 @@ class LoginScreen extends StatelessWidget {
                         "assets/png/email.png",
                         keyboardType: TextInputType.emailAddress,
                         validator: vm.validateEmail,
+                        onChanged: (_) => vm.clearError(),
                       ),
                       Gap(20),
                       _buildTextField(
@@ -78,6 +80,7 @@ class LoginScreen extends StatelessWidget {
                         "assets/png/password.png",
                         obscure: true,
                         validator: vm.validatePassword,
+                        onChanged: (_) => vm.clearError(),
                       ),
                       Gap(6),
                       Padding(
@@ -101,6 +104,28 @@ class LoginScreen extends StatelessWidget {
                           ],
                         ),
                       ),
+
+        
+                      if (vm.errorMessage.isNotEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(
+                            left: 30.w,
+                            right: 30.w,
+                            top: 6.h,
+                          ),
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              vm.errorMessage,
+                              style: TextStyle(
+                                color: AppColors.errorColor,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+
                       Gap(167),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -110,7 +135,7 @@ class LoginScreen extends StatelessWidget {
                             style: TextStyle(color: AppColors.black),
                           ),
                           GestureDetector(
-                            onTap: () => debugPrint("Sign Up"),
+                            onTap: () => Navigator.pushNamed(context, '/signup'),
                             child: Text(
                               AppString.signUp,
                               style: TextStyle(
@@ -126,8 +151,8 @@ class LoginScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(horizontal: 20.w),
                         child: CustomButton(
                           title: AppString.signInButton,
-                          onTap: () {
-                            vm.signIn();
+                          onTap: () async {
+                            await vm.login(context);
                           },
                         ),
                       ),
@@ -151,6 +176,7 @@ class LoginScreen extends StatelessWidget {
     TextInputType keyboardType = TextInputType.text,
     bool obscure = false,
     String? Function(String?)? validator,
+    void Function(String)? onChanged,
   }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 30),
@@ -173,6 +199,7 @@ class LoginScreen extends StatelessWidget {
           obscureText: obscure,
           keyboardType: keyboardType,
           validator: validator,
+          onChanged: onChanged,
           decoration: InputDecoration(
             contentPadding: EdgeInsets.symmetric(
               horizontal: 16.w,

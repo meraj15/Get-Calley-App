@@ -8,87 +8,88 @@ import 'package:gap/gap.dart';
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 
-
-
 class OtpScreen extends StatelessWidget {
-  const OtpScreen({super.key});
+  final TextEditingController emailController;
+  const OtpScreen({super.key, required this.emailController});
 
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<OtpViewModel>(context);
 
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: AppColors.scaffoldColor,
-        body: Column(
+    return Scaffold(
+      backgroundColor: AppColors.scaffoldColor,
+      body: SafeArea(
+        child: Column(
           children: [
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 33.h),
-              child: Image.asset(
-                "assets/png/get_calley_image.png",
-                width: 228.w,
-                height: 60.h,
-              ),
+            Gap(33.h),
+            Image.asset(
+              "assets/png/get_calley_image.png",
+              width: 228.w,
+              height: 60.h,
             ),
+            Gap(33.h),
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
                   color: AppColors.white,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(20.r),
+                  ),
                   border: Border.all(color: AppColors.borderColor),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
                 ),
                 child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
                   child: Column(
                     children: [
+                      Gap(108.h),
                       Padding(
-                        padding: EdgeInsets.only(left: 5, top: 108.h),
+                        padding: const EdgeInsets.only(left: 15.0),
                         child: Text(
-                          AppString.whatsappOtpVerification,
+                          "Whatsapp OTP Verification",
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: AppColors.black,
                             fontSize: 32.sp,
                             fontWeight: FontWeight.w700,
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ),
                       Gap(18),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15.w),
+                        padding: const EdgeInsets.only(left: 15.0),
                         child: Text(
-                          AppString.emailValidationMessage,
+                          "Please ensure your email is valid. We have sent an OTP.",
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: AppColors.languageSelectorSubtile,
                             fontSize: 15.sp,
+                            color: AppColors.languageSelectorSubtile,
                           ),
                         ),
                       ),
                       Gap(33),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 40.w),
-                        child: Pinput(
-                          length: 6,
-                          controller: viewModel.pinController,
-                          onSubmitted: (_) => viewModel.validateOtp(() {
-                            debugPrint("OTP verified");
-                            // Navigator.push(...)
-                          }),
-                          defaultPinTheme: _pinTheme(context, viewModel),
-                          focusedPinTheme: _pinTheme(context, viewModel, focused: true),
-                          submittedPinTheme: _pinTheme(context, viewModel),
+                      Pinput(
+                        length: 6,
+                        controller: viewModel.pinController,
+                        onSubmitted: (_) {
+                          viewModel.verifyOtp(
+                            () => debugPrint("OTP Verified Successfully!"),
+                            () => debugPrint("Invalid OTP!"),
+                            emailController,
+                          );
+                        },
+                        defaultPinTheme: _pinTheme(context, viewModel),
+                        focusedPinTheme: _pinTheme(
+                          context,
+                          viewModel,
+                          focused: true,
                         ),
+                        submittedPinTheme: _pinTheme(context, viewModel),
                       ),
                       if (viewModel.isOtpIncorrect)
                         Padding(
-                          padding: EdgeInsets.only(top: 10.h, left: 40.w, right: 40.w),
+                          padding: EdgeInsets.only(top: 10.h),
                           child: Text(
-                            AppString.incorrectOtpMessage,
-                            style: TextStyle(
-                              color: AppColors.errorColor,
-                              fontSize: 14.sp,
-                            ),
-                            textAlign: TextAlign.center,
+                            "Incorrect OTP. Please try again.",
+                            style: TextStyle(color: AppColors.errorColor),
                           ),
                         ),
                       Gap(17),
@@ -100,32 +101,47 @@ class OtpScreen extends StatelessWidget {
                           color: AppColors.black,
                         ),
                       ),
-                      Gap(143),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(AppString.didntReceiveOtp, style: TextStyle(color: AppColors.black)),
-                          GestureDetector(
-                            onTap: () => debugPrint("Resend OTP"),
-                            child: Text(
-                              AppString.resendOtp,
-                              style: TextStyle(
-                                color: AppColors.appButtonColor,
-                                fontWeight: FontWeight.w600,
+                      Gap(163),
+
+                      GestureDetector(
+                        onTap: () async {
+                          await viewModel.sendOtp(emailController);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("OTP Resent to your email")),
+                          );
+                        },
+                        child: RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: "Didn’t receive the OTP? ",
+                                style: TextStyle(color: AppColors.black),
                               ),
-                            ),
+                              TextSpan(
+                                text: "Resend",
+                                style: TextStyle(
+                                  color: AppColors.appButtonColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                       Gap(11),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: CustomButton(
-                          title: AppString.verifyButton,
-                          onTap: () => viewModel.validateOtp(() {
-                            debugPrint("OTP verified via button");
-                          }),
-                        ),
+                      CustomButton(
+                        title: "Verify",
+                        onTap: () {
+                          viewModel.verifyOtp(
+                            () => Navigator.pushNamed(context, '/home'),
+                            () => ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("Invalid OTP. Please try again"),
+                              ),
+                            ),
+                            emailController
+                          );
+                        },
                       ),
                       Gap(30),
                     ],
@@ -133,17 +149,20 @@ class OtpScreen extends StatelessWidget {
                 ),
               ),
             ),
-          
           ],
         ),
       ),
     );
   }
 
-  PinTheme _pinTheme(BuildContext context, OtpViewModel viewModel, {bool focused = false}) {
+  PinTheme _pinTheme(
+    BuildContext context,
+    OtpViewModel viewModel, {
+    bool focused = false,
+  }) {
     return PinTheme(
       width: 50.w,
-      height: 45.h,
+      height: 50.h,
       textStyle: TextStyle(fontSize: 20.sp, color: AppColors.black),
       decoration: BoxDecoration(
         color: AppColors.white,

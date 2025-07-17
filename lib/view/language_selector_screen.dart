@@ -82,10 +82,7 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
               child: CustomButton(
                 title: "Select",
                 onTap: () {
-                  // Handle language select
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Selected: $selectedLanguage')),
-                  );
+                  Navigator.pushNamed(context, '/login');
                 },
               ),
             ),

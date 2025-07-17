@@ -1,7 +1,10 @@
+// sign_up_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_calley_app_armaan/contants/app_color.dart';
 import 'package:get_calley_app_armaan/contants/app_string.dart';
+import 'package:get_calley_app_armaan/view/otp_screen.dart';
+import 'package:get_calley_app_armaan/view_model/otp_view_model.dart';
 import 'package:get_calley_app_armaan/view_model/sign_up_view_model.dart';
 import 'package:get_calley_app_armaan/widgets/custom_button.dart';
 import 'package:gap/gap.dart';
@@ -73,25 +76,27 @@ class SignUpScreen extends StatelessWidget {
                 ),
               ),
               Gap(24),
-              _buildTextField(
-                "Name",
-                viewModel.nameController,
-                "assets/png/name.png",
-              ),
+              _buildTextField("Name", viewModel.nameController, "assets/png/name.png", validator: viewModel.validateName),
               Gap(20),
               _buildTextField(
                 "Email address",
                 viewModel.emailController,
                 "assets/png/email.png",
                 keyboardType: TextInputType.emailAddress,
-                validator: _emailValidator,
+                validator: viewModel.validateEmail,
               ),
+              if (viewModel.errorMessage.isNotEmpty)
+                Text(
+                  viewModel.errorMessage,
+                  style: TextStyle(color: AppColors.errorColor, fontSize: 14.sp),
+                ),
               Gap(20),
               _buildTextField(
                 "Password",
                 viewModel.passwordController,
                 "assets/png/password.png",
                 obscure: true,
+                validator: viewModel.validatePassword,
               ),
               Gap(20),
               _buildTextField(
@@ -100,22 +105,40 @@ class SignUpScreen extends StatelessWidget {
                 "assets/png/whatsapp.png",
                 assetPrefixImagePath: "assets/png/india_flag.png",
                 keyboardType: TextInputType.phone,
+                validator: viewModel.validatePhone,
               ),
               Gap(20),
               _buildTextField(
                 "Mobile Number",
-                viewModel.phoneController,
+                viewModel.mobileController,
                 "assets/png/mobile.png",
                 keyboardType: TextInputType.phone,
+                validator: viewModel.validateMobile,
               ),
               Gap(7),
               _buildTermsCheckbox(viewModel),
               Gap(14),
-              _buildSignInLink(),
-              Gap(13),
+              _buildSignInLink(context),
+              Gap(11),
+              
               CustomButton(
                 title: "Sign Up",
-                onTap: () => viewModel.validateForm(context),
+                onTap: () async {
+                  viewModel.clearError(); // clear previous backend error
+                  if (viewModel.formKey.currentState!.validate()) {
+                    final error = await viewModel.registerUser(context);
+                    if (error != null) {
+                      viewModel.setError(error);
+                    } else {
+                      await context.read<OtpViewModel>().sendOtp(viewModel.emailController);
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => OtpScreen(emailController: viewModel.emailController),
+                        ),
+                      );
+                    }
+                  }
+                },
               ),
             ],
           ),
@@ -155,10 +178,7 @@ class SignUpScreen extends StatelessWidget {
           keyboardType: keyboardType,
           validator: validator ?? _defaultValidator,
           decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 16.w,
-              vertical: 14.h,
-            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
             hintText: label,
             hintStyle: TextStyle(
               color: AppColors.black,
@@ -207,18 +227,12 @@ class SignUpScreen extends StatelessWidget {
           Flexible(
             child: Row(
               children: [
-                Text(
-                  AppString.termsPrefix,
-                  style: TextStyle(color: AppColors.black),
-                ),
+                Text(AppString.termsPrefix, style: TextStyle(color: AppColors.black)),
                 GestureDetector(
                   onTap: () {},
                   child: Text(
                     AppString.termsLink,
-                    style: TextStyle(
-                      color: AppColors.appButtonColor,
-                      fontSize: 15.sp,
-                    ),
+                    style: TextStyle(color: AppColors.appButtonColor, fontSize: 15.sp),
                   ),
                 ),
               ],
@@ -229,13 +243,13 @@ class SignUpScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSignInLink() {
+  Widget _buildSignInLink(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(AppString.signInPrefix),
         GestureDetector(
-          onTap: () {},
+          onTap: () => Navigator.pushNamed(context, '/login'),
           child: Text(
             AppString.signInLink,
             style: TextStyle(
@@ -263,6 +277,30 @@ class SignUpScreen extends StatelessWidget {
     if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w]{2,4}$').hasMatch(value)) {
       return 'Enter a valid email';
     }
+    return null;
+  }
+
+  String? _nameValidator(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Please enter your name';
+    if (value.trim().length < 3) return 'Name must be at least 3 characters';
+    return null;
+  }
+
+  String? _passwordValidator(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Please enter your password';
+    if (value.length < 6) return 'Password must be at least 6 characters';
+    return null;
+  }
+
+  String? _phoneValidator(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Please enter your phone number';
+    if (!RegExp(r'^\d{10}$').hasMatch(value)) return 'Phone number must be 10 digits';
+    return null;
+  }
+
+  String? _mobileValidator(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Please enter your mobile number';
+    if (!RegExp(r'^\d{10}$').hasMatch(value)) return 'Mobile number must be 10 digits';
     return null;
   }
 }
