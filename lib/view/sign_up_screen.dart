@@ -56,7 +56,7 @@ class SignUpScreen extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                AppString.welcomeText,
+                AppString.welcomeTextSignUp,
                 style: TextStyle(
                   color: AppColors.black,
                   fontWeight: FontWeight.w700,
