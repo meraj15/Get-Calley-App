@@ -29,7 +29,7 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
           children: [
             Gap(10.h),
             Padding(
-              padding: EdgeInsets.only(left: 75.w),
+              padding: EdgeInsets.only(left: 88.w),
               child: Text(
                 'Choose Your Language',
                 style: TextStyle(
@@ -59,7 +59,7 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
                   child: ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: viewModel.languages.length,
-                    separatorBuilder: (context, index) => Gap(15),
+                    separatorBuilder: (context, index) => Gap(18),
                     itemBuilder: (context, index) {
                       LanguageModel lang = viewModel.languages[index];
                       return LanguageTile(
